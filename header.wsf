@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<job>
+<script language="JScript" src="list.js"></script>
+<script language="JScript"><![CDATA[
+(function() {
+	var ret = ['path'];
+	for (var prop in obj) {
+		ret.push(prop);
+	}
+	WSH.echo(ret.join('\t'));
+})();
+]]></script>
+</job>

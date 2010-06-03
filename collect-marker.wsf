@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<job>
+<object id="stream" progid="ADODB.Stream" />
+<reference object="ADODB.Stream" />
+<script language="JScript" src="ado.js"></script>
+<script language="JScript" src="gin.js"></script>
+<script language="JScript"><![CDATA[
+(function() {
+	var path     = WSH.arguments(0);
+	var encoding = WSH.arguments(1);
+
+	var ret = [];
+	var str = adoLoadText(path, encoding);
+	var delimiter = '\t';
+
+	var gin = new Gin.Grammar({
+	  Marker    : / ( Marker0 | Marker1 | Marker2 ):marker (String?):string /,
+	  Marker0   : / Open Types Close /,
+	  Marker1   : / Types CloseOnly ::closeonly /,
+	  Marker2   : / Symbol KanjiKana:kanjikana ::closeonly /,
+	  Types     : / Type Type? ::types /,
+	  Type      : / Char - ( Dot | Open | Close ) /,
+	  Symbol    : / Char - ( Dot | Open | Close | KanjiKana ) /,
+	  CloseOnly : / Dot | ( Close - CloseHook ) /,
+	  KanjiKana : / Kanji | Kana /,
+	  Open      : / <[\(（<＜\[［\{｛≪〈《【〔「『]> /,
+	  Close     : / <[\)）>＞\]］\}｝≫〉》】〕」』]> /,
+	  CloseHook : / <[」』]> /,
+	  Dot       : / <[.．]> /,
+	  Kanji     : / <[\u4E00-\u9FA5]> /,
+	  Kana      : / <[\u3041-\u30FF]> /,
+	  String    : / <[\x09\x20-\uD7FF\uE000-\uFFFD]+> /,
+	  Char      : / <[\x09\x20-\uD7FF\uE000-\uFFFD]> /
+	}, 'Marker', Gin.SPACE);
+
+	var act = function() {
+		var that = {};
+		var _s = '';
+		that.types     = function(v) { return v.join(''); };
+		that.marker    = function(v) { return v.join(delimiter); };
+		that.closeonly = function(v) { v.unshift(''); return v; };
+		that.kanjikana = function(v) { _s = v; return ''; };
+		that.string    = function(v) { return _s + v.join(''); };
+		return that;
+	};
+
+	var trim_expr = /^[\x09\x20\u3000]+|[\x09\x20\u3000]+$/g;
+	var trim = function(str) {
+		return str.replace(trim_expr, '');
+	};
+
+	var lines = str.split(/\n|\r\n?/);
+	for (var i = 0, len = lines.length; i < len; i++) {
+		var line = trim(lines[i]);
+		if (!line.length) {
+			continue;
+		}
+		var match = gin.parse(line, act());
+		if (!match || !match.full) {
+			continue;
+		}
+		var values = match.value;
+		values.unshift(path);
+		ret.push(values.join(delimiter));
+	}
+
+	WSH.echo(ret.join('\n'));
+})();
+]]></script>
+</job>
