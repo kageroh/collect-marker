@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component>
+<registration
+  progid="Component.Ado"
+  classid="{FF2C62D7-CBD3-4F87-A509-38942A006553}"/>
+<public>
+  <method name="loadText">
+	<parameter name="filename"/>
+	<parameter name="charset"/>
+  </method>
+  <method name="loadLinesOfText">
+	<parameter name="filename"/>
+	<parameter name="charset"/>
+  </method>
+  <method name="saveText">
+	<parameter name="filename"/>
+	<parameter name="text"/>
+	<parameter name="charset"/>
+  </method>
+</public>
+<object id="stream" progid="ADODB.Stream" />
+<reference object="ADODB.Stream" />
+<script language="JScript"><![CDATA[
+function loadText(filename, charset) {
+	stream.type = adTypeText;
+	stream.charset = charset;
+	stream.open();
+	stream.loadFromFile(filename);
+	var text = stream.readText();
+	stream.close();
+	return text;
+}
+function loadLinesOfText(filename, charset) {
+	var lines = [];
+	stream.type = adTypeText;
+	stream.charset = charset;
+	stream.open();
+	stream.loadFromFile(filename);
+	while (!stream.EOS) {
+		lines.push(stream.readText(adReadLine));
+	}
+	stream.close();
+	return lines;
+}
+function saveText(filename, text, charset) {
+	stream.type = adTypeText;
+	stream.charset = charset;
+	stream.open();
+	stream.writeText(text);
+	stream.saveToFile(filename, adSaveCreateOverWrite);
+	stream.close();
+}
+]]></script>
+</component>
