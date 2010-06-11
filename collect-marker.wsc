@@ -49,10 +49,12 @@ function parse(path, encoding) {
 		return that;
 	};
 
-	var re_trim = /^[\x09\x20\u3000]+|[\x09\x20\u3000]+$/g;
-	var trim = function(str) {
-		return str.replace(re_trim, '');
-	};
+	var trim = (function() {
+		var re = /^[\x09\x20\u3000]+|[\x09\x20\u3000]+$/g;
+		return function(str) {
+			return str.replace(re, '');
+		};
+	})();
 
 	var lines = str.split(/\n|\r\n?/);
 	for (var i = lines.length; i--;) {
